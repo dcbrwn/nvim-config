@@ -1,28 +1,3 @@
-require('packer').startup(function()
-  use 'wbthomason/packer.nvim'
-
-  use {'dracula/vim', as = 'dracula'}
-
-  use {
-    'nvim-telescope/telescope.nvim',
-    requires = { {'nvim-lua/plenary.nvim'} }
-  }
-
-  use 'neovim/nvim-lspconfig'
-  use 'jose-elias-alvarez/nvim-lsp-ts-utils'
-  use 'hrsh7th/nvim-cmp'
-  use 'hrsh7th/cmp-nvim-lsp'
-  use 'saadparwaiz1/cmp_luasnip'
-  use 'L3MON4D3/LuaSnip'
-
-  use 'sheerun/vim-polyglot'
-
-  use {
-    'nvim-lualine/lualine.nvim',
-    requires = { 'kyazdani42/nvim-web-devicons', opt = true }
-  }
-end)
-
 vim.o.syntax = true
 vim.o.number = true
 vim.o.mouse = 'a'
@@ -30,6 +5,30 @@ vim.o.tabstop = 2
 vim.o.expandtab = true
 vim.o.shiftwidth = 2
 vim.api.nvim_command('colorscheme dracula')
+
+require('packer').startup(function()
+  use {'dracula/vim', as = 'dracula'}
+  use {
+    'nvim-lualine/lualine.nvim',
+    requires = { 'kyazdani42/nvim-web-devicons', opt = true }
+  }
+
+  use 'wbthomason/packer.nvim'
+
+  use 'neovim/nvim-lspconfig'
+
+  use 'jose-elias-alvarez/nvim-lsp-ts-utils'
+  use 'hrsh7th/nvim-cmp'
+  use 'hrsh7th/cmp-nvim-lsp'
+  use 'saadparwaiz1/cmp_luasnip'
+  use 'L3MON4D3/LuaSnip'
+
+  use 'sheerun/vim-polyglot'
+  use {
+    'nvim-telescope/telescope.nvim',
+    requires = { {'nvim-lua/plenary.nvim'} }
+  }
+end)
 
 require('lualine').setup {
   options = {
