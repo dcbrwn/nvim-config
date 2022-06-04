@@ -15,6 +15,8 @@ require('packer').startup(function()
   use 'saadparwaiz1/cmp_luasnip'
   use 'L3MON4D3/LuaSnip'
 
+  use 'sheerun/vim-polyglot'
+
   use {
     'nvim-lualine/lualine.nvim',
     requires = { 'kyazdani42/nvim-web-devicons', opt = true }
@@ -24,6 +26,9 @@ end)
 vim.o.syntax = true
 vim.o.number = true
 vim.o.mouse = 'a'
+vim.o.tabstop = 2
+vim.o.expandtab = true
+vim.o.shiftwidth = 2
 vim.api.nvim_command('colorscheme dracula')
 
 require('lualine').setup {
