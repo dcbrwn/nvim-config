@@ -1,4 +1,7 @@
-vim.o.syntax = true
+
+-- git clone --depth 1 https://github.com/wbthomason/packer.nvim\
+--  ~/.local/share/nvim/site/pack/packer/start/packer.nvimvim.o.syntax = 'on'
+
 vim.o.number = true
 vim.o.mouse = 'a'
 vim.o.tabstop = 2
@@ -24,9 +27,17 @@ require('packer').startup(function()
   use 'L3MON4D3/LuaSnip'
 
   use 'sheerun/vim-polyglot'
+
   use {
     'nvim-telescope/telescope.nvim',
     requires = { {'nvim-lua/plenary.nvim'} }
+  }
+
+  use {
+    'kyazdani42/nvim-tree.lua',
+    requires = {
+      'kyazdani42/nvim-web-devicons', -- optional, for file icon
+    },
   }
 end)
 
@@ -35,95 +46,162 @@ require('lualine').setup {
     icons_enabled = false,
     theme = 'auto',
     component_separators = { left = ' ', right = ' '},
-    section_separators = { left = '', right = ''},
+    section_separators = { left = 'ÓÇ∞', right = 'ÓÇ≤'},
   }
 }
 
 require('telescope').setup {
   defaults = {
-    file_ignore_patterns = { ".git", "node_modules"}
+    file_ignore_patterns = { ".git", "node_modules", "site-packages", ".venv", "__pycache__", ".idea", "canondata" }
   }
 }
 
+require'nvim-tree'.setup {
+  renderer = {
+    add_trailing = false,
+    group_empty = false,
+    highlight_git = false,
+    full_name = false,
+    highlight_opened_files = "none",
+    root_folder_modifier = ":~",
+    indent_markers = {
+      enable = false,
+      icons = {
+        corner = "+ ",
+        edge = "+ ",
+        item = "- ",
+        none = "  ",
+      },
+    },
+    icons = {
+      webdev_colors = true,
+      git_placement = "before",
+      padding = " ",
+      symlink_arrow = " ? ",
+      show = {
+        file = false,
+        folder = false,
+        folder_arrow = true,
+        git = false,
+      },
+      glyphs = {
+        default = " ",
+        symlink = "~",
+        folder = {
+          arrow_closed = "+",
+          arrow_open = "-",
+          default = "#",
+          open = "+",
+          empty = "-",
+          empty_open = "-",
+          symlink = "~",
+          symlink_open = "~",
+        },
+        git = {
+          unstaged = "?",
+          staged = "?",
+          unmerged = "?",
+          renamed = "?",
+          untracked = "?",
+          deleted = "?",
+          ignored = "?",
+        },
+      },
+    },
+    special_files = { "package.json", "requiremets.txt", "setup.py", "__init__.py", "__main__.py", "index.ts", "ya.make", "README.md", "readme.md" },
+  },
+}
+
+vim.api.nvim_set_keymap('n', '<Leader>ft', '<cmd>NvimTreeToggle<cr>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<Leader>fg', '<cmd>Telescope live_grep<cr>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<Leader>ff', '<cmd>Telescope find_files<cr>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<Leader>rf', '<cmd>!python3 %<cr>', { noremap = true })
+vim.api.nvim_set_keymap('n', '<Leader>rp', '<cmd>tabnew | r !python3 #<cr>', { noremap = true })
 
-lspconfig = require('lspconfig')
-
-lspconfig.pyright.setup({})
-
-lspconfig.tsserver.setup({
-    -- Needed for inlayHints. Merge this table with your settings or copy
-    -- it from the source if you want to add your own init_options.
-    init_options = require("nvim-lsp-ts-utils").init_options,
-    --
-    on_attach = function(client, bufnr)
-	require('lsp_compl').attach(client, bufnr, { server_side_fuzzy_completion = true })
-
-	local ts_utils = require("nvim-lsp-ts-utils")
-
-        -- defaults
-        ts_utils.setup({
-            debug = false,
-            disable_commands = false,
-            enable_import_on_completion = false,
-
-            -- import all
-            import_all_timeout = 5000, -- ms
-            -- lower numbers = higher priority
-            import_all_priorities = {
-                same_file = 1, -- add to existing import statement
-                local_files = 2, -- git files or files with relative path markers
-                buffer_content = 3, -- loaded buffer content
-                buffers = 4, -- loaded buffer names
-            },
-            import_all_scan_buffers = 100,
-            import_all_select_source = false,
-            -- if false will avoid organizing imports
-            always_organize_imports = true,
-
-            -- filter diagnostics
-            filter_out_diagnostics_by_severity = {},
-            filter_out_diagnostics_by_code = {},
-
-            -- inlay hints
-            auto_inlay_hints = true,
-            inlay_hints_highlight = "Comment",
-            inlay_hints_priority = 200, -- priority of the hint extmarks
-            inlay_hints_throttle = 150, -- throttle the inlay hint request
-            inlay_hints_format = { -- format options for individual hint kind
-                Type = {},
-                Parameter = {},
-                Enum = {},
-            },
-
-            -- update imports on file move
-            update_imports_on_move = false,
-            require_confirmation_on_move = false,
-            watch_dir = nil,
-        })
-
-        -- required to fix code action ranges and filter diagnostics
-        ts_utils.setup_client(client)
-
-        -- no default maps, so you may want to define some here
-        local opts = { silent = true }
-        vim.api.nvim_buf_set_keymap(bufnr, "n", "gs", ":TSLspOrganize<CR>", opts)
-        vim.api.nvim_buf_set_keymap(bufnr, "n", "gr", ":TSLspRenameFile<CR>", opts)
-        vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", ":TSLspImportAll<CR>", opts)
-    end,
-})
+local lspconfig = require('lspconfig')
 
 -- Add additional capabilities supported by nvim-cmp
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').update_capabilities(capabilities)
 
-local lspconfig = require('lspconfig')
+function configLspKeys()
+  local bufopts = { noremap=true, silent=true, buffer=bufnr }
+  vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, bufopts)
+  vim.keymap.set('n', 'gd', vim.lsp.buf.definition, bufopts)
+end
+
+lspconfig.tsserver.setup({
+  capabilities = capabilities,
+
+  -- Needed for inlayHints. Merge this table with your settings or copy
+  -- it from the source if you want to add your own init_options.
+  init_options = require("nvim-lsp-ts-utils").init_options,
+  --
+  on_attach = function(client, bufnr)
+    configLspKeys()
+    require('lsp_compl').attach(client, bufnr, { server_side_fuzzy_completion = true })
+
+    local ts_utils = require("nvim-lsp-ts-utils")
+
+    -- defaults
+    ts_utils.setup({
+      debug = false,
+      disable_commands = false,
+      enable_import_on_completion = false,
+
+      -- import all
+      import_all_timeout = 5000, -- ms
+      -- lower numbers = higher priority
+      import_all_priorities = {
+          same_file = 1, -- add to existing import statement
+          local_files = 2, -- git files or files with relative path markers
+          buffer_content = 3, -- loaded buffer content
+          buffers = 4, -- loaded buffer names
+      },
+      import_all_scan_buffers = 100,
+      import_all_select_source = false,
+      -- if false will avoid organizing imports
+      always_organize_imports = true,
+
+      -- filter diagnostics
+      filter_out_diagnostics_by_severity = {},
+      filter_out_diagnostics_by_code = {},
+
+      -- inlay hints
+      auto_inlay_hints = true,
+      inlay_hints_highlight = "Comment",
+      inlay_hints_priority = 200, -- priority of the hint extmarks
+      inlay_hints_throttle = 150, -- throttle the inlay hint request
+      inlay_hints_format = { -- format options for individual hint kind
+          Type = {},
+          Parameter = {},
+          Enum = {},
+      },
+
+      -- update imports on file move
+      update_imports_on_move = false,
+      require_confirmation_on_move = false,
+      watch_dir = nil,
+    })
+
+    -- required to fix code action ranges and filter diagnostics
+    ts_utils.setup_client(client)
+
+    -- no default maps, so you may want to define some here
+    local opts = { silent = true }
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gs", ":TSLspOrganize<CR>", opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gr", ":TSLspRenameFile<CR>", opts)
+    vim.api.nvim_buf_set_keymap(bufnr, "n", "gi", ":TSLspImportAll<CR>", opts)
+  end,
+})
 
 -- Enable some language servers with the additional completion capabilities offered by nvim-cmp
-local servers = { 'clangd', 'rust_analyzer', 'pyright', 'tsserver' }
+local servers = { 'clangd', 'rust_analyzer', 'pyright' }
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup {
-    -- does this override setup from above?
+    on_attach = function(client, bufnr)
+      configLspKeys()
+    end,
     capabilities = capabilities,
   }
 end
