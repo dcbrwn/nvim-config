@@ -46,7 +46,7 @@ require('lualine').setup {
     icons_enabled = false,
     theme = 'auto',
     component_separators = { left = ' ', right = ' '},
-    section_separators = { left = 'ÓÇ∞', right = 'ÓÇ≤'},
+    section_separators = { left = '', right = ''},
   }
 }
 
